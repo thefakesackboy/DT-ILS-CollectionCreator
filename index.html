@@ -165,7 +165,7 @@ a:hover{color:#ffd166}
       <div class="step" id="step-auth">
         <div class="step-h"><span class="n">1</span>ESTABLISH COGITATOR LINK</div>
         <div class="hint">A GitHub access rune is required to inscribe repositories on your behalf. It lives only in this browser and speaks solely to api.github.com.</div>
-        <div class="hint">→ Generate a token here (scope <b>public_repo</b> is pre-selected): <a id="mklink" href="https://github.com/settings/tokens/new?scopes=public_repo&description=Darktide%20Collection%20Forge" target="_blank" rel="noopener">github.com/settings/tokens/new</a> — then copy it below.</div>
+        <div class="hint">→ Generate a token here (scope <b>public_repo</b> is pre-selected): <a id="mklink" href="https://github.com/settings/tokens/new?scopes=public_repo&description=Darktide%20Collection%20Forge" target="_blank" rel="noopener">github.com/settings/tokens/new</a>, then copy it below.</div>
         <label for="tok">ACCESS RUNE / PERSONAL ACCESS TOKEN</label>
         <div class="row">
           <input class="grow" type="password" id="tok" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
@@ -194,7 +194,7 @@ a:hover{color:#ffd166}
         <div class="step-h"><span class="n">3</span>INLOAD IMAGE-DATA</div>
         <div class="drop" id="drop">
           ▓ DRAG IMAGE FILES HERE, OR CLICK TO SELECT ▓<br>
-          <span class="dim">.png .jpg .jpeg .webp — any resolution, 4K encouraged</span>
+          <span class="dim">.png .jpg .jpeg .webp, any resolution, 4K encouraged</span>
         </div>
         <input type="file" id="file" accept="image/*" multiple hidden>
         <label class="chk">
@@ -218,13 +218,13 @@ a:hover{color:#ffd166}
 
       <!-- RESULT -->
       <div class="result" id="result">
-        <div class="ok" style="font-size:16px">✚ COLLECTION FORGED — THE OMNISSIAH PROVIDES</div>
-        <div class="hint">Copy this address, then in Darktide open the mod options and click <b>“Use collection from clipboard.”</b> No files to edit — that's the only step.</div>
+        <div class="ok" style="font-size:16px">✚ COLLECTION FORGED: THE OMNISSIAH PROVIDES</div>
+        <div class="hint">Copy this address, then in Darktide open the mod options and click <b>“Use collection from clipboard.”</b></div>
         <div class="snippet">
           <code id="ownerrepo">owner/repo</code>
           <button class="btn" id="btn-copy">COPY FOR IN-GAME PASTE</button>
         </div>
-        <div class="hint" style="margin-top:12px">Data-vault: <a id="repolink" href="#" target="_blank" rel="noopener">open on GitHub</a> &nbsp;·&nbsp; give this address to anyone — they load it the same way, right from the game.</div>
+        <div class="hint" style="margin-top:12px">Data-vault: <a id="repolink" href="#" target="_blank" rel="noopener">open on GitHub</a> &nbsp;·&nbsp; give this address to anyone, and they load it the same way, right from the game.</div>
       </div>
 
       <div class="foot">THE EMPEROR PROTECTS</div>
@@ -302,7 +302,7 @@ async function doAuth(){
     if(!el.repo.value) el.repo.value=suggestName(u.login);
   }catch(e){
     state.token=null;
-    el.authStatus.innerHTML='<span class="err">STATUS: link refused — '+e.message+' (check the rune &amp; its public_repo scope).</span>';
+    el.authStatus.innerHTML='<span class="err">STATUS: link refused: '+e.message+' (check the rune &amp; its public_repo scope).</span>';
   }finally{
     el.btnAuth.disabled=false;
   }
