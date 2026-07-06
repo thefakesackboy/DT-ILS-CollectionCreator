@@ -165,7 +165,7 @@ a:hover{color:#ffd166}
       <div class="step" id="step-auth">
         <div class="step-h"><span class="n">1</span>ESTABLISH COGITATOR LINK</div>
         <div class="hint">A GitHub access rune is required to inscribe repositories on your behalf. It lives only in this browser and speaks solely to api.github.com.</div>
-        <div class="hint">→ Generate a token here (scope <b>public_repo</b> is pre-selected): <a id="mklink" href="https://github.com/settings/tokens/new?scopes=public_repo&description=Darktide%20Collection%20Forge" target="_blank" rel="noopener">github.com/settings/tokens/new</a>, then copy it below.</div>
+        <div class="hint">→ Generate a token here (scopes <b>public_repo</b> and <b>delete_repo</b> are pre-selected; delete_repo is only needed for deleting whole collections): <a id="mklink" href="https://github.com/settings/tokens/new?scopes=public_repo,delete_repo&description=Darktide%20Collection%20Forge" target="_blank" rel="noopener">github.com/settings/tokens/new</a>, then copy it below.</div>
         <label for="tok">ACCESS RUNE / PERSONAL ACCESS TOKEN</label>
         <div class="row">
           <input class="grow" type="password" id="tok" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
@@ -174,6 +174,15 @@ a:hover{color:#ffd166}
         </div>
         <div class="hint" id="auth-status">STATUS: awaiting rune…</div>
       </div>
+
+      <div class="step" id="step-mode" style="display:none">
+        <div class="row">
+          <button class="btn" id="btn-mode-forge">FORGE NEW COLLECTION</button>
+          <button class="btn ghost" id="btn-mode-manage">MANAGE MY COLLECTIONS</button>
+        </div>
+      </div>
+
+      <div id="panel-forge">
 
       <!-- STEP 2: NAME -->
       <div class="step locked" id="step-name">
@@ -227,6 +236,49 @@ a:hover{color:#ffd166}
         <div class="hint" style="margin-top:12px">Data-vault: <a id="repolink" href="#" target="_blank" rel="noopener">open on GitHub</a> &nbsp;·&nbsp; give this address to anyone, and they load it the same way, right from the game.</div>
       </div>
 
+      </div><!-- /panel-forge -->
+
+      <div id="panel-manage" class="locked" style="display:none">
+        <div class="step">
+          <div class="step-h"><span class="n">M1</span>SELECT A COLLECTION</div>
+          <div class="hint">Scan your account for collections you've forged, or type any owner/repo you own to manage it.</div>
+          <div class="row">
+            <button class="btn" id="btn-scan">SCAN MY VAULTS</button>
+            <input class="grow" type="text" id="manage-manual" placeholder="owner/repo" spellcheck="false">
+            <button class="btn ghost" id="btn-manual-load">LOAD</button>
+          </div>
+          <div class="filelist" id="manage-list" style="display:none;max-height:200px"></div>
+          <div class="hint" id="scan-status"></div>
+        </div>
+
+        <div class="step" id="manage-detail" style="display:none">
+          <div class="step-h"><span class="n">M2</span><span id="manage-title">owner/repo</span></div>
+          <div class="hint">Click images to mark them for deletion (marked = red), then delete. Or add more below.</div>
+          <div class="filelist" id="manage-grid" style="max-height:320px"></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="btn-del-images" disabled>DELETE MARKED IMAGES</button>
+            <span class="tag" id="manage-count">0 images</span>
+          </div>
+
+          <hr class="rule">
+          <div class="step-h" style="font-size:14px">ADD IMAGES</div>
+          <div class="drop" id="manage-drop">▓ DRAG IMAGES HERE, OR CLICK ▓</div>
+          <input type="file" id="manage-file" accept="image/*" multiple hidden>
+          <label class="chk"><input type="checkbox" id="manage-opt" checked><span>Optimise (re-encode to JPEG, cap long edge at 3840px).</span></label>
+          <div class="filelist" id="manage-add-list" style="display:none;max-height:160px"></div>
+          <button class="btn" id="btn-add-images" disabled>ADD TO COLLECTION</button>
+
+          <hr class="rule">
+          <div class="row">
+            <button class="btn ghost" id="btn-del-repo" style="border-color:var(--red);color:var(--red)">DELETE ENTIRE COLLECTION</button>
+            <span class="dim" style="font-size:12px">Permanent. Removes the whole repository from GitHub (needs the delete_repo scope).</span>
+          </div>
+        </div>
+
+        <div class="console" id="mcon" style="margin-top:16px"><span class="dim">// manage cogitator idle.</span><span class="cursor"></span></div>
+        <div class="progressbar" id="mpbar"><i id="mpbar-i"></i></div>
+      </div>
+
       <div class="foot">THE EMPEROR PROTECTS</div>
     </div>
   </div>
@@ -235,6 +287,7 @@ a:hover{color:#ffd166}
 <script>
 "use strict";
 const API="https://api.github.com";
+const MARKER="improved-loading-screens";
 const state={ token:null, user:null, files:[], repoInfo:null };
 
 const $=id=>document.getElementById(id);
@@ -312,6 +365,9 @@ function unlock(){
   el.stepName.classList.remove("locked");
   el.stepImg.classList.remove("locked");
   el.stepGo.classList.remove("locked");
+  var sm=document.getElementById("step-mode"); if(sm) sm.style.display="";
+  var pm=document.getElementById("panel-manage"); if(pm) pm.classList.remove("locked");
+  setMode("forge");
 }
 function logout(){
   state.token=null; state.user=null;
@@ -320,6 +376,9 @@ function logout(){
   el.linkstate.textContent="STANDBY"; el.linkstate.className="";
   el.authStatus.innerHTML="STATUS: link severed.";
   el.stepName.classList.add("locked"); el.stepImg.classList.add("locked"); el.stepGo.classList.add("locked");
+  var sm=document.getElementById("step-mode"); if(sm) sm.style.display="none";
+  var pm=document.getElementById("panel-manage"); if(pm) pm.classList.add("locked");
+  setMode("forge");
   try{ sessionStorage.removeItem("cf_tok"); }catch(e){}
 }
 
@@ -447,6 +506,7 @@ async function forge(){
       });
       branch=state.repoInfo.default_branch||"main";
       log("vault consecrated: "+state.repoInfo.full_name,"ok");
+      try{ await gh("PUT","/repos/"+owner+"/"+repoName+"/topics",{names:[MARKER,"darktide","loading-screens"]}); }catch(e){}
     }
     setProgress(6);
 
@@ -532,6 +592,202 @@ window.addEventListener("drop",e=>e.preventDefault());
 el.btnForge.onclick=forge;
 function copyText(t){ navigator.clipboard&&navigator.clipboard.writeText(t); }
 el.btnCopy.onclick=()=>{ copyText(el.ownerrepo.textContent); const o=el.btnCopy.textContent; el.btnCopy.textContent="COPIED"; setTimeout(()=>el.btnCopy.textContent=o,1200); };
+
+/* ================= MANAGE MODE ================= */
+const MG = {
+  panelForge:$("panel-forge"), panelManage:$("panel-manage"),
+  btnForge:$("btn-mode-forge"), btnManage:$("btn-mode-manage"),
+  btnScan:$("btn-scan"), manual:$("manage-manual"), btnManual:$("btn-manual-load"),
+  list:$("manage-list"), scanStatus:$("scan-status"),
+  detail:$("manage-detail"), title:$("manage-title"),
+  grid:$("manage-grid"), btnDelImages:$("btn-del-images"), count:$("manage-count"),
+  drop:$("manage-drop"), file:$("manage-file"), opt:$("manage-opt"),
+  addList:$("manage-add-list"), btnAdd:$("btn-add-images"), btnDelRepo:$("btn-del-repo"),
+  con:$("mcon"), pbar:$("mpbar"), pbarI:$("mpbar-i")
+};
+const mstate = { owner:null, repo:null, branch:"main", files:[], marked:{}, add:[] };
+
+function mlog(msg,cls){
+  const cur=MG.con.querySelector(".cursor");
+  const line=document.createElement("span");
+  line.className="l"+(cls?" "+cls:"");
+  line.textContent="["+new Date().toLocaleTimeString([], {hour12:false})+"] "+msg+"\n";
+  MG.con.insertBefore(line,cur); MG.con.scrollTop=MG.con.scrollHeight;
+}
+function mprog(p){ MG.pbar.classList.add("show"); MG.pbarI.style.width=Math.max(0,Math.min(100,p))+"%"; }
+
+function setMode(m){
+  MG.panelForge.style.display = m==="manage" ? "none" : "";
+  MG.panelManage.style.display = m==="manage" ? "" : "none";
+  MG.btnForge.classList.toggle("ghost", m==="manage");
+  MG.btnManage.classList.toggle("ghost", m!=="manage");
+}
+MG.btnForge.onclick=()=>setMode("forge");
+MG.btnManage.onclick=()=>setMode("manage");
+
+async function scanVaults(){
+  if(!state.token){ mlog("no cogitator link.","err"); return; }
+  MG.btnScan.disabled=true;
+  MG.scanStatus.innerHTML='<span class="warn">scanning your repositories…</span>';
+  try{
+    const repos=await gh("GET","/user/repos?per_page=100&affiliation=owner&sort=updated");
+    const cols=(repos||[]).filter(r=> Array.isArray(r.topics) && r.topics.indexOf(MARKER)>=0);
+    renderCollectionList(cols);
+    MG.scanStatus.innerHTML = cols.length
+      ? '<span class="ok">found '+cols.length+' collection(s).</span>'
+      : '<span class="dim">no tagged collections found. Older ones still load by typing owner/repo above.</span>';
+  }catch(e){ MG.scanStatus.innerHTML='<span class="err">scan failed: '+e.message+'</span>'; }
+  finally{ MG.btnScan.disabled=false; }
+}
+function renderCollectionList(cols){
+  if(!cols.length){ MG.list.style.display="none"; MG.list.innerHTML=""; return; }
+  MG.list.style.display=""; MG.list.innerHTML="";
+  cols.forEach(r=>{
+    const row=document.createElement("div"); row.className="filerow";
+    row.innerHTML='<span class="fn">'+r.full_name+'</span><button class="btn" style="padding:2px 12px">SELECT</button>';
+    row.querySelector("button").onclick=()=>selectCollection(r.owner.login, r.name);
+    MG.list.appendChild(row);
+  });
+}
+function loadManual(){
+  const v=(MG.manual.value||"").trim().replace(/\.git$/,"").replace(/^https?:\/\/github\.com\//,"").replace(/\/+$/,"");
+  const m=v.match(/^([\w.-]+)\/([\w.-]+)$/);
+  if(!m){ mlog("enter a valid owner/repo.","err"); return; }
+  selectCollection(m[1], m[2]);
+}
+
+async function selectCollection(owner, repo){
+  mstate.owner=owner; mstate.repo=repo; mstate.marked={}; mstate.add=[]; renderManageAdd();
+  MG.title.textContent=owner+"/"+repo;
+  MG.detail.style.display="";
+  MG.grid.innerHTML='<div class="filerow"><span class="fn dim">reading collection…</span></div>';
+  mlog("loading "+owner+"/"+repo+" …","dim");
+  try{
+    const info=await gh("GET","/repos/"+owner+"/"+repo);
+    mstate.branch=info.default_branch||"main";
+    const tree=await gh("GET","/repos/"+owner+"/"+repo+"/git/trees/"+mstate.branch+"?recursive=1");
+    const imgs=(tree.tree||[]).filter(e=> e.type==="blob" && /\.(png|jpe?g|webp|bmp)$/i.test(e.path));
+    mstate.files=imgs.map(e=>({path:e.path}));
+    renderManageGrid();
+    mlog("loaded "+mstate.files.length+" image(s).","ok");
+  }catch(e){ mlog("load failed: "+e.message,"err"); MG.grid.innerHTML='<div class="filerow"><span class="fn err">'+e.message+'</span></div>'; }
+}
+
+function renderManageGrid(){
+  const g=MG.grid; g.innerHTML="";
+  if(!mstate.files.length){ g.innerHTML='<div class="filerow"><span class="fn dim">(no images in this collection)</span></div>'; }
+  mstate.files.forEach(f=>{
+    const marked=!!mstate.marked[f.path];
+    const row=document.createElement("div"); row.className="filerow"; row.style.cursor="pointer";
+    row.style.borderLeft = marked ? "3px solid var(--red)" : "3px solid transparent";
+    const raw="https://raw.githubusercontent.com/"+mstate.owner+"/"+mstate.repo+"/"+mstate.branch+"/"+f.path.replace(/ /g,"%20");
+    row.innerHTML='<img src="'+raw+'"><span class="fn">'+f.path+'</span><span class="fx">'+(marked?'<span class="err">MARKED</span>':'')+'</span>';
+    row.onclick=()=>{ mstate.marked[f.path]=!mstate.marked[f.path]; renderManageGrid(); };
+    g.appendChild(row);
+  });
+  const nMarked=Object.keys(mstate.marked).filter(k=>mstate.marked[k]).length;
+  MG.count.textContent=mstate.files.length+" images"+(nMarked?(" · "+nMarked+" marked"):"");
+  MG.btnDelImages.disabled = nMarked===0;
+}
+
+async function deleteMarked(){
+  const paths=Object.keys(mstate.marked).filter(k=>mstate.marked[k]);
+  if(!paths.length) return;
+  if(!confirm("Delete "+paths.length+" image(s) from "+mstate.owner+"/"+mstate.repo+"? This is permanent.")) return;
+  MG.btnDelImages.disabled=true;
+  try{
+    const owner=mstate.owner, repo=mstate.repo, branch=mstate.branch;
+    mlog("deleting "+paths.length+" image(s)…","dim"); mprog(20);
+    const ref=await gh("GET","/repos/"+owner+"/"+repo+"/git/ref/heads/"+branch);
+    const headSha=ref.object.sha;
+    const headCommit=await gh("GET","/repos/"+owner+"/"+repo+"/git/commits/"+headSha);
+    const treeItems=paths.map(p=>({path:p, mode:"100644", type:"blob", sha:null}));
+    const newTree=await gh("POST","/repos/"+owner+"/"+repo+"/git/trees",{base_tree:headCommit.tree.sha, tree:treeItems});
+    const commit=await gh("POST","/repos/"+owner+"/"+repo+"/git/commits",{message:"Delete "+paths.length+" image(s) via Collection Forge", tree:newTree.sha, parents:[headSha]});
+    await gh("PATCH","/repos/"+owner+"/"+repo+"/git/refs/heads/"+branch,{sha:commit.sha});
+    mprog(100); mlog("deleted "+paths.length+" image(s).","ok");
+    mstate.marked={};
+    await selectCollection(owner, repo);
+  }catch(e){ mlog("delete failed: "+e.message,"err"); }
+  finally{ MG.btnDelImages.disabled=false; }
+}
+
+MG.drop.onclick=()=>MG.file.click();
+MG.file.onchange=()=>{ addManageFiles(MG.file.files); MG.file.value=""; };
+["dragenter","dragover"].forEach(ev=>MG.drop.addEventListener(ev,e=>{e.preventDefault();MG.drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>MG.drop.addEventListener(ev,e=>{e.preventDefault();MG.drop.classList.remove("over");}));
+MG.drop.addEventListener("drop",e=>{ if(e.dataTransfer&&e.dataTransfer.files) addManageFiles(e.dataTransfer.files); });
+function addManageFiles(list){
+  for(const f of list){ if(!isImg(f)) continue; if(mstate.add.some(x=>x.file.name===f.name&&x.file.size===f.size)) continue; mstate.add.push({file:f,url:URL.createObjectURL(f)}); }
+  renderManageAdd();
+}
+function renderManageAdd(){
+  const l=MG.addList;
+  if(!mstate.add.length){ l.style.display="none"; l.innerHTML=""; MG.btnAdd.disabled=true; return; }
+  l.style.display=""; l.innerHTML=""; MG.btnAdd.disabled=false;
+  mstate.add.forEach((x,i)=>{
+    const row=document.createElement("div"); row.className="filerow";
+    row.innerHTML='<img src="'+x.url+'"><span class="fn">'+x.file.name+'</span><span class="fx">'+humanSize(x.file.size)+'</span><span class="del">✕</span>';
+    row.querySelector(".del").onclick=()=>{ URL.revokeObjectURL(x.url); mstate.add.splice(i,1); renderManageAdd(); };
+    l.appendChild(row);
+  });
+}
+async function addImages(){
+  if(!mstate.add.length) return;
+  MG.btnAdd.disabled=true;
+  try{
+    const owner=mstate.owner, repo=mstate.repo, branch=mstate.branch;
+    mlog("preparing "+mstate.add.length+" image(s)…","dim"); mprog(5);
+    const processed=[];
+    for(let i=0;i<mstate.add.length;i++){ processed.push(await processOne(mstate.add[i])); mprog(5+(i+1)/mstate.add.length*15); }
+    uniqueNames(processed);
+    const existing={}; mstate.files.forEach(f=>existing[f.path.toLowerCase()]=true);
+    processed.forEach(p=>{ let n=p.name, base=n.replace(/(\.[^.]+)$/,""), ext=(n.match(/(\.[^.]+)$/)||[""])[0], k=n.toLowerCase(), c=1; while(existing[k]){ n=base+"_"+(c++)+ext; k=n.toLowerCase(); } existing[k]=true; p.name=n; });
+    const ref=await gh("GET","/repos/"+owner+"/"+repo+"/git/ref/heads/"+branch);
+    const headSha=ref.object.sha;
+    const headCommit=await gh("GET","/repos/"+owner+"/"+repo+"/git/commits/"+headSha);
+    const treeItems=[];
+    for(let i=0;i<processed.length;i++){
+      const b64=await blobToBase64(processed[i].blob);
+      const blob=await gh("POST","/repos/"+owner+"/"+repo+"/git/blobs",{content:b64,encoding:"base64"});
+      treeItems.push({path:processed[i].name, mode:"100644", type:"blob", sha:blob.sha});
+      mlog("uploaded "+processed[i].name,"ok"); mprog(20+(i+1)/processed.length*68);
+    }
+    const newTree=await gh("POST","/repos/"+owner+"/"+repo+"/git/trees",{base_tree:headCommit.tree.sha, tree:treeItems});
+    const commit=await gh("POST","/repos/"+owner+"/"+repo+"/git/commits",{message:"Add "+processed.length+" image(s) via Collection Forge", tree:newTree.sha, parents:[headSha]});
+    await gh("PATCH","/repos/"+owner+"/"+repo+"/git/refs/heads/"+branch,{sha:commit.sha});
+    mprog(100); mlog("added "+processed.length+" image(s).","ok");
+    mstate.add.forEach(x=>URL.revokeObjectURL(x.url)); mstate.add=[]; renderManageAdd();
+    await selectCollection(owner, repo);
+  }catch(e){ mlog("add failed: "+e.message,"err"); }
+  finally{ MG.btnAdd.disabled=false; }
+}
+
+async function deleteRepo(){
+  const owner=mstate.owner, repo=mstate.repo;
+  if(!owner||!repo) return;
+  const typed=prompt('This permanently deletes the ENTIRE repository "'+owner+"/"+repo+'".\n\nType the repo name ('+repo+') to confirm:');
+  if(typed!==repo){ mlog("delete cancelled.","dim"); return; }
+  MG.btnDelRepo.disabled=true;
+  try{
+    mlog("deleting repository "+owner+"/"+repo+" …","warn");
+    await gh("DELETE","/repos/"+owner+"/"+repo);
+    mlog("repository deleted.","ok");
+    MG.detail.style.display="none";
+    mstate.owner=null; mstate.repo=null;
+    scanVaults();
+  }catch(e){
+    if(e.status===403) mlog("delete failed: your token lacks the delete_repo scope. Generate a new token with delete_repo checked.","err");
+    else mlog("delete failed: "+e.message,"err");
+  }finally{ MG.btnDelRepo.disabled=false; }
+}
+
+MG.btnScan.onclick=scanVaults;
+MG.btnManual.onclick=loadManual;
+MG.manual.addEventListener("keydown",e=>{ if(e.key==="Enter") loadManual(); });
+MG.btnDelImages.onclick=deleteMarked;
+MG.btnAdd.onclick=addImages;
+MG.btnDelRepo.onclick=deleteRepo;
 
 /* restore session token */
 (function(){
