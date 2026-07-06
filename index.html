@@ -164,7 +164,7 @@ a:hover{color:#ffd166}
       <!-- STEP 1: AUTH -->
       <div class="step" id="step-auth">
         <div class="step-h"><span class="n">1</span>ESTABLISH COGITATOR LINK</div>
-        <div class="hint">A GitHub access rune is required to inscribe repositories on your behalf. It lives only in this browser and speaks solely to api.github.com — never to any other machine.</div>
+        <div class="hint">A GitHub access rune is required to inscribe repositories on your behalf. It lives only in this browser and speaks solely to api.github.com.</div>
         <div class="hint">→ Generate a token here (scope <b>public_repo</b> is pre-selected): <a id="mklink" href="https://github.com/settings/tokens/new?scopes=public_repo&description=Darktide%20Collection%20Forge" target="_blank" rel="noopener">github.com/settings/tokens/new</a> — then copy it below.</div>
         <label for="tok">ACCESS RUNE / PERSONAL ACCESS TOKEN</label>
         <div class="row">
@@ -219,20 +219,15 @@ a:hover{color:#ffd166}
       <!-- RESULT -->
       <div class="result" id="result">
         <div class="ok" style="font-size:16px">✚ COLLECTION FORGED — THE OMNISSIAH PROVIDES</div>
-        <div class="hint">Paste this address into <b>collection.lua</b> in the mod's folder, then restart Darktide:</div>
+        <div class="hint">Copy this address, then in Darktide open the mod options and click <b>“Use collection from clipboard.”</b> No files to edit — that's the only step.</div>
         <div class="snippet">
           <code id="ownerrepo">owner/repo</code>
-          <button class="btn" id="btn-copy">COPY</button>
+          <button class="btn" id="btn-copy">COPY FOR IN-GAME PASTE</button>
         </div>
-        <div class="hint" style="margin-top:12px">Full <b>collection.lua</b> line:</div>
-        <div class="snippet">
-          <code id="lualine">return "owner/repo"</code>
-          <button class="btn" id="btn-copy2">COPY</button>
-        </div>
-        <div class="hint" style="margin-top:12px">Data-vault: <a id="repolink" href="#" target="_blank" rel="noopener">open on GitHub</a> &nbsp;·&nbsp; give this address to anyone — they paste it the same way to load your pack.</div>
+        <div class="hint" style="margin-top:12px">Data-vault: <a id="repolink" href="#" target="_blank" rel="noopener">open on GitHub</a> &nbsp;·&nbsp; give this address to anyone — they load it the same way, right from the game.</div>
       </div>
 
-      <div class="foot">UNOFFICIAL FAN TOOL · NOT AFFILIATED WITH FATSHARK OR GAMES WORKSHOP · THE EMPEROR PROTECTS</div>
+      <div class="foot">THE EMPEROR PROTECTS</div>
     </div>
   </div>
 </div>
@@ -250,8 +245,8 @@ const el={
   repo:$("repo"), desc:$("desc"),
   drop:$("drop"), file:$("file"), opt:$("opt"), filelist:$("filelist"), imgStatus:$("img-status"),
   btnForge:$("btn-forge"), forgeTag:$("forge-tag"), con:$("con"), pbar:$("pbar"), pbarI:$("pbar-i"),
-  result:$("result"), ownerrepo:$("ownerrepo"), lualine:$("lualine"), repolink:$("repolink"),
-  btnCopy:$("btn-copy"), btnCopy2:$("btn-copy2")
+  result:$("result"), ownerrepo:$("ownerrepo"), repolink:$("repolink"),
+  btnCopy:$("btn-copy")
 };
 
 /* ---------- console ---------- */
@@ -505,7 +500,6 @@ async function forge(){
     const full=owner+"/"+repoName;
     log("COLLECTION FORGED :: "+full,"ok");
     el.ownerrepo.textContent=full;
-    el.lualine.textContent='return "'+full+'"';
     el.repolink.href=state.repoInfo.html_url;
     el.result.classList.add("show");
     el.forgeTag.textContent="complete";
@@ -537,8 +531,7 @@ window.addEventListener("drop",e=>e.preventDefault());
 
 el.btnForge.onclick=forge;
 function copyText(t){ navigator.clipboard&&navigator.clipboard.writeText(t); }
-el.btnCopy.onclick=()=>{ copyText(el.ownerrepo.textContent); el.btnCopy.textContent="COPIED"; setTimeout(()=>el.btnCopy.textContent="COPY",1200); };
-el.btnCopy2.onclick=()=>{ copyText(el.lualine.textContent); el.btnCopy2.textContent="COPIED"; setTimeout(()=>el.btnCopy2.textContent="COPY",1200); };
+el.btnCopy.onclick=()=>{ copyText(el.ownerrepo.textContent); const o=el.btnCopy.textContent; el.btnCopy.textContent="COPIED"; setTimeout(()=>el.btnCopy.textContent=o,1200); };
 
 /* restore session token */
 (function(){
