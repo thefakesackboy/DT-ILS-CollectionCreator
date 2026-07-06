@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COLLECTION FORGE // Improved Loading Screens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030805;
+  --panel:#061109;
+  --green:#39ff9c;
+  --green-dim:#1f8f5a;
+  --green-deep:#0c3b25;
+  --green-bright:#c8ffe6;
+  --amber:#ffb000;
+  --red:#ff5560;
+  --scan:rgba(0,20,10,.35);
+  --glow:0 0 4px rgba(57,255,156,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(20,80,50,.20), transparent 60%),
+    var(--bg);
+  color:var(--green);
+  font-family:'Share Tech Mono',ui-monospace,'Cascadia Mono','Consolas',monospace;
+  font-size:15px;
+  line-height:1.5;
+  letter-spacing:.4px;
+  padding:26px 16px 60px;
+  text-shadow:var(--glow);
+  -webkit-font-smoothing:none;
+}
+/* CRT overlays */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg, transparent 0 2px, var(--scan) 3px 3px);
+  mix-blend-mode:multiply;
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background:radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,.55) 100%);
+  animation:flick 6s infinite steps(60);
+}
+@keyframes flick{0%,97%{opacity:1}98%{opacity:.86}99%{opacity:.97}100%{opacity:1}}
+
+.wrap{max-width:940px;margin:0 auto}
+.crt{
+  border:1px solid var(--green-dim);
+  background:linear-gradient(180deg, rgba(10,30,20,.6), rgba(3,10,6,.85));
+  box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 0 28px rgba(20,90,55,.18) inset;
+}
+.titlebar{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  border-bottom:1px solid var(--green-dim);
+  padding:8px 14px;background:rgba(12,40,26,.5);
+  font-size:13px;color:var(--green-bright);
+}
+.titlebar .dotrow{letter-spacing:2px;color:var(--green-dim)}
+.pad{padding:22px 22px 26px}
+
+h1{
+  font-size:26px;margin:2px 0 2px;color:var(--green-bright);letter-spacing:1.5px;
+}
+.sub{color:var(--green-dim);font-size:13px;margin-bottom:2px}
+.rule{border:0;border-top:1px dashed var(--green-deep);margin:18px 0}
+.ascii{white-space:pre;color:var(--green);font-size:12px;line-height:1.15;margin:0 0 6px;opacity:.9}
+
+.step{margin:20px 0}
+.step-h{color:var(--green-bright);margin-bottom:8px;font-size:15px}
+.step-h .n{color:var(--bg);background:var(--green);padding:0 7px;margin-right:9px;text-shadow:none}
+.hint{color:var(--green-dim);font-size:12.5px;margin:4px 0 10px}
+
+label{display:block;color:var(--green-dim);font-size:12px;margin:10px 0 4px;letter-spacing:1px}
+input[type=text],input[type=password],textarea{
+  width:100%;background:#020604;color:var(--green-bright);
+  border:1px solid var(--green-dim);padding:9px 11px;font:inherit;text-shadow:var(--glow);
+  outline:none;
+}
+input:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 8px rgba(57,255,156,.25)}
+textarea{resize:vertical;min-height:44px}
+
+.btn{
+  display:inline-block;cursor:pointer;background:transparent;color:var(--green);
+  border:1px solid var(--green);padding:9px 18px;font:inherit;letter-spacing:1px;
+  text-shadow:var(--glow);transition:all .12s;
+}
+.btn:hover:not(:disabled){background:var(--green);color:var(--bg);text-shadow:none;box-shadow:0 0 14px rgba(57,255,156,.4)}
+.btn:disabled{opacity:.4;cursor:not-allowed;border-color:var(--green-dim);color:var(--green-dim)}
+.btn.big{padding:13px 26px;font-size:16px}
+.btn.ghost{border-color:var(--green-dim);color:var(--green-dim)}
+.btn.ghost:hover:not(:disabled){background:var(--green-deep);color:var(--green-bright)}
+a{color:var(--amber);text-decoration:none;border-bottom:1px dotted var(--amber)}
+a:hover{color:#ffd166}
+
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:220px}
+.tag{font-size:12px;color:var(--green-dim);border:1px solid var(--green-deep);padding:2px 8px}
+.ok{color:var(--green)} .warn{color:var(--amber)} .err{color:var(--red)} .dim{color:var(--green-dim)}
+
+.locked{opacity:.35;pointer-events:none;filter:grayscale(.3)}
+.chk{display:flex;gap:9px;align-items:flex-start;margin:12px 0;cursor:pointer;color:var(--green-dim);font-size:13px}
+.chk input{margin-top:3px}
+
+/* dropzone */
+.drop{
+  border:1px dashed var(--green-dim);padding:26px;text-align:center;color:var(--green-dim);
+  cursor:pointer;transition:all .12s;background:rgba(6,20,13,.4);
+}
+.drop:hover,.drop.over{border-color:var(--green);color:var(--green-bright);background:rgba(12,50,32,.4)}
+.filelist{margin-top:12px;max-height:230px;overflow:auto;border:1px solid var(--green-deep)}
+.filerow{display:flex;align-items:center;gap:10px;padding:6px 9px;border-bottom:1px solid var(--green-deep);font-size:12.5px}
+.filerow:last-child{border-bottom:0}
+.filerow img{width:44px;height:26px;object-fit:cover;border:1px solid var(--green-deep);background:#000;flex:0 0 auto}
+.filerow .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--green-bright)}
+.filerow .fx{color:var(--green-dim)}
+.filerow .del{cursor:pointer;color:var(--red);border:1px solid var(--green-deep);padding:0 7px}
+.filerow .del:hover{background:var(--red);color:#000;text-shadow:none}
+
+/* console */
+.console{
+  background:#010402;border:1px solid var(--green-dim);margin-top:16px;
+  height:200px;overflow:auto;padding:10px 12px;font-size:12.5px;line-height:1.5;
+}
+.console .l{white-space:pre-wrap;word-break:break-word}
+.cursor{display:inline-block;width:9px;height:15px;background:var(--green);
+  animation:blink 1s steps(1) infinite;vertical-align:-2px;margin-left:2px}
+@keyframes blink{50%{opacity:0}}
+
+.result{border:1px solid var(--green);padding:16px;margin-top:16px;background:rgba(12,50,32,.28);display:none}
+.result.show{display:block}
+.snippet{display:flex;gap:10px;align-items:center;margin-top:8px}
+.snippet code{flex:1;background:#010402;border:1px solid var(--green-deep);padding:8px 11px;color:var(--green-bright);overflow:auto}
+
+.foot{color:var(--green-deep);font-size:11px;text-align:center;margin-top:22px;letter-spacing:1px}
+.progressbar{height:6px;background:#010402;border:1px solid var(--green-deep);margin-top:10px;display:none}
+.progressbar.show{display:block}
+.progressbar i{display:block;height:100%;width:0;background:var(--green);box-shadow:var(--glow)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crt">
+    <div class="titlebar">
+      <span>++ COGITATOR LINK ++</span>
+      <span class="dotrow">████ ▓▓▓▓ ░░░░</span>
+      <span id="linkstate">STANDBY</span>
+    </div>
+    <div class="pad">
+      <pre class="ascii">   ___ ___  _    _    ___ ___ _____ ___ ___  _  _   ___ ___  ___  ___ ___
+  / __/ _ \| |  | |  | __/ __|_   _|_ _/ _ \| \| | | __/ _ \| _ \/ __| __|
+ | (_| (_) | |__| |__| _| (__  | |  | | (_) | .` | | _| (_) |   / (_ | _|
+  \___\___/|____|____|___\___| |_| |___\___/|_|\_| |_| \___/|_|_\___|___|</pre>
+      <h1>COLLECTION FORGE</h1>
+      <div class="sub">// IMPROVED LOADING SCREENS &nbsp;·&nbsp; DATA-SLATE MUNITORUM &nbsp;·&nbsp; ADEPTUS MECHANICUS SANCTIONED</div>
+      <div class="hint">Assemble a loading-screen image Collection and inload it to the noosphere (GitHub). The forged data-vault streams straight into the game. No cost. No servitors harmed.</div>
+
+      <hr class="rule">
+
+      <!-- STEP 1: AUTH -->
+      <div class="step" id="step-auth">
+        <div class="step-h"><span class="n">1</span>ESTABLISH COGITATOR LINK</div>
+        <div class="hint">A GitHub access rune is required to inscribe repositories on your behalf. It lives only in this browser and speaks solely to api.github.com — never to any other machine.</div>
+        <div class="hint">→ Generate a token here (scope <b>public_repo</b> is pre-selected): <a id="mklink" href="https://github.com/settings/tokens/new?scopes=public_repo&description=Darktide%20Collection%20Forge" target="_blank" rel="noopener">github.com/settings/tokens/new</a> — then copy it below.</div>
+        <label for="tok">ACCESS RUNE / PERSONAL ACCESS TOKEN</label>
+        <div class="row">
+          <input class="grow" type="password" id="tok" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+          <button class="btn" id="btn-auth">ESTABLISH LINK</button>
+          <button class="btn ghost" id="btn-logout" style="display:none">SEVER LINK</button>
+        </div>
+        <div class="hint" id="auth-status">STATUS: awaiting rune…</div>
+      </div>
+
+      <!-- STEP 2: NAME -->
+      <div class="step locked" id="step-name">
+        <div class="step-h"><span class="n">2</span>NAME THE DATA-VAULT</div>
+        <div class="hint">This becomes a public GitHub repository. Its address (owner/repo) is what players paste into the mod.</div>
+        <div class="row">
+          <div class="grow">
+            <label for="repo">COLLECTION NAME</label>
+            <input type="text" id="repo" placeholder="my-darktide-loadscreens" spellcheck="false">
+          </div>
+        </div>
+        <label for="desc">DESCRIPTION (optional)</label>
+        <input type="text" id="desc" placeholder="A pack of loading screen backgrounds for Darktide.">
+      </div>
+
+      <!-- STEP 3: IMAGES -->
+      <div class="step locked" id="step-img">
+        <div class="step-h"><span class="n">3</span>INLOAD IMAGE-DATA</div>
+        <div class="drop" id="drop">
+          ▓ DRAG IMAGE FILES HERE, OR CLICK TO SELECT ▓<br>
+          <span class="dim">.png .jpg .jpeg .webp — any resolution, 4K encouraged</span>
+        </div>
+        <input type="file" id="file" accept="image/*" multiple hidden>
+        <label class="chk">
+          <input type="checkbox" id="opt" checked>
+          <span>Optimise for streaming (recommended): re-encode to high-quality JPEG and cap the long edge at 3840px. Shrinks the vault massively with no visible loss. Uncheck to upload originals untouched.</span>
+        </label>
+        <div class="filelist" id="filelist" style="display:none"></div>
+        <div class="hint" id="img-status"></div>
+      </div>
+
+      <!-- STEP 4: FORGE -->
+      <div class="step locked" id="step-go">
+        <div class="step-h"><span class="n">4</span>ENGAGE THE FORGE</div>
+        <div class="row">
+          <button class="btn big" id="btn-forge">⚙ FORGE COLLECTION</button>
+          <span class="tag" id="forge-tag">idle</span>
+        </div>
+        <div class="progressbar" id="pbar"><i id="pbar-i"></i></div>
+        <div class="console" id="con"><span class="dim">// cogitator idle. awaiting directive.</span><span class="cursor"></span></div>
+      </div>
+
+      <!-- RESULT -->
+      <div class="result" id="result">
+        <div class="ok" style="font-size:16px">✚ COLLECTION FORGED — THE OMNISSIAH PROVIDES</div>
+        <div class="hint">Paste this address into <b>collection.lua</b> in the mod's folder, then restart Darktide:</div>
+        <div class="snippet">
+          <code id="ownerrepo">owner/repo</code>
+          <button class="btn" id="btn-copy">COPY</button>
+        </div>
+        <div class="hint" style="margin-top:12px">Full <b>collection.lua</b> line:</div>
+        <div class="snippet">
+          <code id="lualine">return "owner/repo"</code>
+          <button class="btn" id="btn-copy2">COPY</button>
+        </div>
+        <div class="hint" style="margin-top:12px">Data-vault: <a id="repolink" href="#" target="_blank" rel="noopener">open on GitHub</a> &nbsp;·&nbsp; give this address to anyone — they paste it the same way to load your pack.</div>
+      </div>
+
+      <div class="foot">UNOFFICIAL FAN TOOL · NOT AFFILIATED WITH FATSHARK OR GAMES WORKSHOP · THE EMPEROR PROTECTS</div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const API="https://api.github.com";
+const state={ token:null, user:null, files:[], repoInfo:null };
+
+const $=id=>document.getElementById(id);
+const el={
+  tok:$("tok"), btnAuth:$("btn-auth"), btnLogout:$("btn-logout"), authStatus:$("auth-status"),
+  linkstate:$("linkstate"),
+  stepName:$("step-name"), stepImg:$("step-img"), stepGo:$("step-go"),
+  repo:$("repo"), desc:$("desc"),
+  drop:$("drop"), file:$("file"), opt:$("opt"), filelist:$("filelist"), imgStatus:$("img-status"),
+  btnForge:$("btn-forge"), forgeTag:$("forge-tag"), con:$("con"), pbar:$("pbar"), pbarI:$("pbar-i"),
+  result:$("result"), ownerrepo:$("ownerrepo"), lualine:$("lualine"), repolink:$("repolink"),
+  btnCopy:$("btn-copy"), btnCopy2:$("btn-copy2")
+};
+
+/* ---------- console ---------- */
+function log(msg,cls){
+  const cur=el.con.querySelector(".cursor");
+  const line=document.createElement("span");
+  line.className="l"+(cls?" "+cls:"");
+  const t=new Date().toLocaleTimeString([], {hour12:false});
+  line.textContent="["+t+"] "+msg+"\n";
+  el.con.insertBefore(line, cur);
+  el.con.scrollTop=el.con.scrollHeight;
+}
+function setProgress(p){
+  el.pbar.classList.add("show");
+  el.pbarI.style.width=Math.max(0,Math.min(100,p))+"%";
+}
+
+/* ---------- github api ---------- */
+async function gh(method,path,body){
+  const res=await fetch(API+path,{
+    method,
+    headers:Object.assign(
+      {"Authorization":"token "+state.token,"Accept":"application/vnd.github+json"},
+      body?{"Content-Type":"application/json"}:{}
+    ),
+    body:body?JSON.stringify(body):undefined
+  });
+  let data=null; try{ data=await res.json(); }catch(e){}
+  if(!res.ok){
+    const e=new Error((data&&data.message)||("HTTP "+res.status));
+    e.status=res.status; e.data=data; throw e;
+  }
+  return data;
+}
+
+/* ---------- auth ---------- */
+async function doAuth(){
+  const tok=el.tok.value.trim();
+  if(!tok){ el.authStatus.innerHTML='<span class="err">STATUS: no rune supplied.</span>'; return; }
+  state.token=tok;
+  el.btnAuth.disabled=true;
+  el.authStatus.innerHTML='<span class="warn">STATUS: handshaking with the noosphere…</span>';
+  try{
+    const u=await gh("GET","/user");
+    state.user=u;
+    el.authStatus.innerHTML='<span class="ok">STATUS: linked as <b>'+u.login+'</b>. cogitator online.</span>';
+    el.linkstate.textContent="LINKED · "+u.login;
+    el.linkstate.className="ok";
+    el.btnLogout.style.display="";
+    el.tok.disabled=true;
+    unlock();
+    try{ sessionStorage.setItem("cf_tok",tok); }catch(e){}
+    if(!el.repo.value) el.repo.value=suggestName(u.login);
+  }catch(e){
+    state.token=null;
+    el.authStatus.innerHTML='<span class="err">STATUS: link refused — '+e.message+' (check the rune &amp; its public_repo scope).</span>';
+  }finally{
+    el.btnAuth.disabled=false;
+  }
+}
+function suggestName(login){ return "darktide-loadscreens"; }
+function unlock(){
+  el.stepName.classList.remove("locked");
+  el.stepImg.classList.remove("locked");
+  el.stepGo.classList.remove("locked");
+}
+function logout(){
+  state.token=null; state.user=null;
+  el.tok.disabled=false; el.tok.value="";
+  el.btnLogout.style.display="none";
+  el.linkstate.textContent="STANDBY"; el.linkstate.className="";
+  el.authStatus.innerHTML="STATUS: link severed.";
+  el.stepName.classList.add("locked"); el.stepImg.classList.add("locked"); el.stepGo.classList.add("locked");
+  try{ sessionStorage.removeItem("cf_tok"); }catch(e){}
+}
+
+/* ---------- files ---------- */
+function isImg(f){ return /\.(png|jpe?g|webp|bmp)$/i.test(f.name) || (f.type||"").startsWith("image/"); }
+function sanitizeFile(n){ return n.replace(/[^A-Za-z0-9._-]+/g,"_").replace(/_+/g,"_"); }
+function humanSize(b){ return b<1048576? (b/1024).toFixed(0)+"KB" : (b/1048576).toFixed(1)+"MB"; }
+
+function addFiles(list){
+  let added=0;
+  for(const f of list){
+    if(!isImg(f)) continue;
+    if(state.files.some(x=>x.file.name===f.name && x.file.size===f.size)) continue;
+    state.files.push({file:f, url:URL.createObjectURL(f)});
+    added++;
+  }
+  renderFiles();
+  if(added) log(added+" image(s) queued.","dim");
+}
+function removeFile(i){
+  URL.revokeObjectURL(state.files[i].url);
+  state.files.splice(i,1);
+  renderFiles();
+}
+function renderFiles(){
+  const fl=el.filelist;
+  if(!state.files.length){ fl.style.display="none"; fl.innerHTML=""; el.imgStatus.textContent=""; updateForgeState(); return; }
+  fl.style.display="";
+  fl.innerHTML="";
+  let total=0;
+  state.files.forEach((x,i)=>{
+    total+=x.file.size;
+    const row=document.createElement("div"); row.className="filerow";
+    row.innerHTML='<img src="'+x.url+'"><span class="fn">'+x.file.name+'</span><span class="fx">'+humanSize(x.file.size)+'</span><span class="del" data-i="'+i+'">✕</span>';
+    fl.appendChild(row);
+  });
+  fl.querySelectorAll(".del").forEach(d=>d.onclick=()=>removeFile(+d.dataset.i));
+  el.imgStatus.innerHTML='<span class="dim">'+state.files.length+' image(s) · '+humanSize(total)+' raw</span>';
+  updateForgeState();
+}
+function updateForgeState(){
+  el.btnForge.disabled=!(state.token && state.files.length && el.repo.value.trim());
+}
+
+/* ---------- image processing ---------- */
+function loadBitmap(file){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>res(img);
+    img.onerror=()=>rej(new Error("decode failed"));
+    img.src=URL.createObjectURL(file);
+  });
+}
+async function processOne(entry){
+  const f=entry.file;
+  if(!el.opt.checked){
+    return { name:sanitizeFile(f.name), blob:f };
+  }
+  try{
+    const img=await loadBitmap(f);
+    const maxEdge=3840;
+    const scale=Math.min(1, maxEdge/Math.max(img.naturalWidth,img.naturalHeight));
+    const w=Math.max(1,Math.round(img.naturalWidth*scale));
+    const h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const c=document.createElement("canvas"); c.width=w; c.height=h;
+    c.getContext("2d").drawImage(img,0,0,w,h);
+    URL.revokeObjectURL(img.src);
+    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.85));
+    if(!blob) throw new Error("encode failed");
+    const base=sanitizeFile(f.name).replace(/\.[A-Za-z0-9]+$/,"");
+    return { name:base+".jpg", blob };
+  }catch(e){
+    return { name:sanitizeFile(f.name), blob:f };
+  }
+}
+async function blobToBase64(blob){
+  const buf=new Uint8Array(await blob.arrayBuffer());
+  let bin=""; const chunk=0x8000;
+  for(let i=0;i<buf.length;i+=chunk){ bin+=String.fromCharCode.apply(null,buf.subarray(i,i+chunk)); }
+  return btoa(bin);
+}
+
+/* ---------- forge ---------- */
+function sanitizeRepo(n){ return n.trim().replace(/[^A-Za-z0-9._-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,90); }
+function uniqueNames(items){
+  const seen={};
+  for(const it of items){
+    let name=it.name, base=name.replace(/(\.[^.]+)$/,""), ext=(name.match(/(\.[^.]+)$/)||[""])[0], k=name.toLowerCase(), n=1;
+    while(seen[k]){ name=base+"_"+(n++)+ext; k=name.toLowerCase(); }
+    seen[k]=true; it.name=name;
+  }
+  return items;
+}
+
+async function forge(){
+  if(!state.token){ log("no cogitator link.","err"); return; }
+  const repoName=sanitizeRepo(el.repo.value);
+  if(!repoName){ log("invalid collection name.","err"); return; }
+  if(!state.files.length){ log("no image-data queued.","err"); return; }
+
+  el.btnForge.disabled=true; el.forgeTag.textContent="working";
+  el.result.classList.remove("show");
+  setProgress(1);
+  const owner=state.user.login;
+  const branchGuess="main";
+
+  try{
+    /* 1. locate or consecrate the repo */
+    let branch=branchGuess;
+    log("querying vault "+owner+"/"+repoName+" …","dim");
+    let exists=false;
+    try{
+      state.repoInfo=await gh("GET","/repos/"+owner+"/"+repoName);
+      exists=true;
+      branch=state.repoInfo.default_branch||"main";
+      log("existing data-vault located. appending to branch '"+branch+"'.","warn");
+    }catch(e){
+      if(e.status!==404) throw e;
+    }
+    if(!exists){
+      log("consecrating new data-vault…","dim");
+      state.repoInfo=await gh("POST","/user/repos",{
+        name:repoName, description:el.desc.value.trim()||"Darktide loading screen Collection.",
+        private:false, auto_init:true
+      });
+      branch=state.repoInfo.default_branch||"main";
+      log("vault consecrated: "+state.repoInfo.full_name,"ok");
+    }
+    setProgress(6);
+
+    /* 2. process images (optimise) */
+    const optimise=el.opt.checked;
+    log(optimise?"rites of optimisation commencing…":"uploading originals (no optimisation)…","dim");
+    const processed=[];
+    for(let i=0;i<state.files.length;i++){
+      const p=await processOne(state.files[i]);
+      processed.push(p);
+      setProgress(6 + (i+1)/state.files.length*14);
+    }
+    uniqueNames(processed);
+    let optTotal=processed.reduce((s,p)=>s+p.blob.size,0);
+    log("prepared "+processed.length+" image(s), "+humanSize(optTotal)+" to inload.","dim");
+
+    /* 3. base ref + tree */
+    log("reading vault head…","dim");
+    let ref;
+    for(let tryn=0;tryn<6;tryn++){
+      try{ ref=await gh("GET","/repos/"+owner+"/"+repoName+"/git/ref/heads/"+branch); break; }
+      catch(e){ if(e.status===404 && tryn<5){ await sleep(700); } else throw e; }
+    }
+    const headSha=ref.object.sha;
+    const headCommit=await gh("GET","/repos/"+owner+"/"+repoName+"/git/commits/"+headSha);
+    const baseTree=headCommit.tree.sha;
+
+    /* 4. blobs */
+    const treeItems=[];
+    for(let i=0;i<processed.length;i++){
+      const p=processed[i];
+      const b64=await blobToBase64(p.blob);
+      const blob=await gh("POST","/repos/"+owner+"/"+repoName+"/git/blobs",{content:b64,encoding:"base64"});
+      treeItems.push({path:p.name, mode:"100644", type:"blob", sha:blob.sha});
+      log("inloaded ["+(i+1)+"/"+processed.length+"] "+p.name+" ("+humanSize(p.blob.size)+")","ok");
+      setProgress(20 + (i+1)/processed.length*68);
+    }
+
+    /* 5. tree + commit + ref */
+    log("weaving manifest tree…","dim");
+    const newTree=await gh("POST","/repos/"+owner+"/"+repoName+"/git/trees",{base_tree:baseTree, tree:treeItems});
+    log("sealing commit…","dim");
+    const commit=await gh("POST","/repos/"+owner+"/"+repoName+"/git/commits",{
+      message:"Add "+processed.length+" loading screen image(s) via Collection Forge",
+      tree:newTree.sha, parents:[headSha]
+    });
+    log("advancing vault head…","dim");
+    await gh("PATCH","/repos/"+owner+"/"+repoName+"/git/refs/heads/"+branch,{sha:commit.sha, force:false});
+    setProgress(100);
+
+    const full=owner+"/"+repoName;
+    log("COLLECTION FORGED :: "+full,"ok");
+    el.ownerrepo.textContent=full;
+    el.lualine.textContent='return "'+full+'"';
+    el.repolink.href=state.repoInfo.html_url;
+    el.result.classList.add("show");
+    el.forgeTag.textContent="complete";
+    el.result.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){
+    log("FORGE FAILURE :: "+e.message,"err");
+    if(e.data&&e.data.errors) log(JSON.stringify(e.data.errors),"err");
+    el.forgeTag.textContent="error";
+  }finally{
+    el.btnForge.disabled=false;
+    updateForgeState();
+  }
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ---------- wiring ---------- */
+el.btnAuth.onclick=doAuth;
+el.tok.addEventListener("keydown",e=>{ if(e.key==="Enter") doAuth(); });
+el.btnLogout.onclick=logout;
+el.repo.addEventListener("input",updateForgeState);
+
+el.drop.onclick=()=>el.file.click();
+el.file.onchange=()=>{ addFiles(el.file.files); el.file.value=""; };
+["dragenter","dragover"].forEach(ev=>el.drop.addEventListener(ev,e=>{e.preventDefault();el.drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>el.drop.addEventListener(ev,e=>{e.preventDefault();el.drop.classList.remove("over");}));
+el.drop.addEventListener("drop",e=>{ if(e.dataTransfer&&e.dataTransfer.files) addFiles(e.dataTransfer.files); });
+window.addEventListener("dragover",e=>e.preventDefault());
+window.addEventListener("drop",e=>e.preventDefault());
+
+el.btnForge.onclick=forge;
+function copyText(t){ navigator.clipboard&&navigator.clipboard.writeText(t); }
+el.btnCopy.onclick=()=>{ copyText(el.ownerrepo.textContent); el.btnCopy.textContent="COPIED"; setTimeout(()=>el.btnCopy.textContent="COPY",1200); };
+el.btnCopy2.onclick=()=>{ copyText(el.lualine.textContent); el.btnCopy2.textContent="COPIED"; setTimeout(()=>el.btnCopy2.textContent="COPY",1200); };
+
+/* restore session token */
+(function(){
+  try{
+    const t=sessionStorage.getItem("cf_tok");
+    if(t){ el.tok.value=t; doAuth(); }
+  }catch(e){}
+  log("cogitator forge online. supply access rune to begin.","dim");
+})();
+</script>
+</body>
+</html>
